@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แดชบอร์ดผลการดำเนินการตรวจสอบสถานประกอบการ</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+:root{--navy:#0A1F44;--royal:#1A3A6B;--mid:#2055A4;--accent:#3B7DD8;--gold:#C9A84C;--gold-light:#E8C96A;--green:#1E8C5A;--red:#C0392B;--orange:#D68910;--bg:#F0F4FB;--card:#FFFFFF;--border:#D0DCEE;--text:#0D1B35;--muted:#5A6E8C;--sw:230px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+.sidebar{width:var(--sw);background:var(--navy);min-height:100vh;position:fixed;top:0;left:0;z-index:100;display:flex;flex-direction:column}
+.sb-logo{padding:22px 18px;border-bottom:1px solid rgba(255,255,255,0.1)}
+.sb-emblem{width:42px;height:42px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:10px}
+.sb-title{color:#fff;font-size:11.5px;font-weight:700;line-height:1.5}
+.sb-sub{color:var(--gold-light);font-size:10px;margin-top:2px}
+.sb-nav{flex:1;padding:14px 0}
+.sb-sec{color:rgba(255,255,255,0.3);font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:8px 18px 3px}
+.sb-item{display:flex;align-items:center;gap:9px;padding:9px 18px;color:rgba(255,255,255,0.55);font-size:13px;cursor:pointer;transition:.2s;border-left:3px solid transparent;user-select:none}
+.sb-item:hover{background:rgba(255,255,255,0.06);color:#fff}
+.sb-item.active{background:rgba(59,125,216,0.18);color:#fff;border-left-color:var(--gold)}
+.sb-foot{padding:14px 18px;border-top:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.35);font-size:10.5px}
+.main{margin-left:var(--sw);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--royal);height:58px;padding:0 26px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--gold);position:sticky;top:0;z-index:90}
+.topbar-title{color:#fff;font-size:14px;font-weight:700}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.badge-year{background:var(--gold);color:var(--navy);font-size:11.5px;font-weight:700;padding:3px 11px;border-radius:20px;font-family:'IBM Plex Mono',monospace}
+.btn{padding:6px 14px;border-radius:6px;font-size:12px;font-family:'Sarabun',sans-serif;cursor:pointer;border:none;font-weight:600;transition:.2s}
+.btn-ghost{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff}
+.btn-ghost:hover{background:rgba(255,255,255,0.2)}
+.btn-primary{background:var(--mid);color:#fff}
+.btn-primary:hover{background:var(--royal)}
+.btn-sm{padding:4px 10px;font-size:11px}
+.filterbar{background:#fff;padding:10px 26px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.filter-lbl{font-size:11.5px;font-weight:700;color:var(--muted)}
+.fsel{border:1px solid var(--border);border-radius:6px;padding:5px 9px;font-size:12.5px;font-family:'Sarabun',sans-serif;background:var(--bg);cursor:pointer;outline:none}
+.fsel:focus{border-color:var(--accent)}
+.finput{border:1px solid var(--border);border-radius:6px;padding:5px 9px;font-size:12.5px;font-family:'Sarabun',sans-serif;background:#fff;outline:none;min-width:220px}
+.finput:focus{border-color:var(--accent)}
+.status-tag{margin-left:auto;font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;display:flex;align-items:center;gap:5px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.page{display:none;flex:1;flex-direction:column}
+.page.active{display:flex}
+.content{padding:22px 26px;display:flex;flex-direction:column;gap:18px;flex:1}
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;position:relative;overflow:hidden;transition:.2s;animation:fadeUp .4s ease both}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(10,31,68,.1)}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent)}
+.kpi.c-gold::before{background:var(--gold)}.kpi.c-green::before{background:var(--green)}
+.kpi.c-red::before{background:var(--red)}.kpi.c-orange::before{background:var(--orange)}
+.kpi-lbl{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+.kpi-val{font-size:20px;font-weight:700;color:var(--navy);font-family:'IBM Plex Mono',monospace;line-height:1;margin-bottom:4px;word-break:break-all}
+.kpi-sub{font-size:11px;color:var(--muted)}
+.kpi-ico{position:absolute;top:14px;right:14px;font-size:26px;opacity:.1}
+.charts-row{display:grid;grid-template-columns:1.2fr 1fr 340px;gap:14px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;animation:fadeUp .4s ease both;animation-delay:.15s}
+.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.card-title{font-size:13px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:7px}
+.card-ico{width:26px;height:26px;background:var(--bg);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.card-tag{font-size:10.5px;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:2px 7px;color:var(--muted);font-weight:600}
+.chart-wrap{position:relative;height:190px}.chart-wrap.sm{height:150px}
+.dleg{margin-top:12px;display:flex;flex-direction:column;gap:7px}
+.dleg-row{display:flex;align-items:center;justify-content:space-between;font-size:12px}
+.dleg-l{display:flex;align-items:center;gap:7px}
+.dleg-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.dleg-val{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:11.5px}
+.bottom-row{display:grid;grid-template-columns:1.4fr 1fr;gap:14px}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{background:var(--bg);color:var(--muted);font-weight:700;font-size:10.5px;letter-spacing:.3px;text-transform:uppercase;padding:7px 9px;text-align:left;border-bottom:2px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+.tbl th:hover{background:#e4eaf5}
+.tbl td{padding:8px 9px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#f7f9fd;cursor:pointer}
+.sbadge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600}
+.s-y{background:#E8F5EE;color:var(--green)}.s-n{background:#FDECEA;color:var(--red)}
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 0;font-size:12px;color:var(--muted)}
+.pag-btns{display:flex;gap:4px;flex-wrap:wrap}
+.pag-btn{padding:4px 10px;border:1px solid var(--border);border-radius:5px;background:#fff;font-size:12px;cursor:pointer;font-family:'Sarabun',sans-serif;transition:.15s}
+.pag-btn:hover{background:var(--bg)}.pag-btn.active{background:var(--mid);color:#fff;border-color:var(--mid)}
+.prog-item{margin-bottom:12px}
+.prog-hd{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+.prog-bar{height:7px;background:var(--bg);border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;border-radius:99px;transition:width 1s ease}
+.prog-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:12px;padding:28px;max-width:680px;width:90%;max-height:85vh;overflow-y:auto;position:relative}
+.modal-title{font-size:15px;font-weight:700;color:var(--navy);margin-bottom:18px;padding-right:32px}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted)}
+.modal-close:hover{color:var(--text)}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.detail-item{background:var(--bg);border-radius:8px;padding:10px 12px}
+.detail-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+.detail-val{font-size:13px;color:var(--text);font-weight:500;word-break:break-word}
+.detail-full{grid-column:1/-1}
+.law-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.law-chip{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;color:#fff}
+#mapContainer{height:calc(100vh - 116px);width:100%}
+.map-info{background:#fff;padding:10px 26px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;font-size:12px;color:var(--muted)}
+.settings-wrap{padding:28px;max-width:560px}
+.settings-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:18px}
+.settings-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:16px}
+.form-lbl{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;display:block}
+.form-input{width:100%;border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;font-family:'Sarabun',sans-serif;outline:none;transition:border-color .2s}
+.form-input:focus{border-color:var(--accent)}
+.form-hint{font-size:11px;color:var(--muted);margin-top:5px}
+.save-row{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+.conn-status{font-size:12px;font-weight:600}
+.conn-ok{color:var(--green)}.conn-err{color:var(--red)}
+.loading{text-align:center;padding:40px;color:var(--muted);font-size:13px}
+.err-box{background:#FDECEA;border:1px solid var(--red);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--red);margin-bottom:14px;display:none}
+.foot{padding:12px 26px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:10.5px;color:var(--muted);background:#fff}
+.foot-l{font-weight:600;color:var(--navy)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.kpi:nth-child(1){animation-delay:.04s}.kpi:nth-child(2){animation-delay:.08s}
+.kpi:nth-child(3){animation-delay:.12s}.kpi:nth-child(4){animation-delay:.16s}.kpi:nth-child(5){animation-delay:.20s}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-emblem" style="background:transparent;padding:0;overflow:hidden"><img src="data:image/png;base64,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" style="width:42px;height:42px;object-fit:contain;border-radius:8px"></div>
+    <div class="sb-title">ระบบตรวจสอบ<br>สถานประกอบการ</div>
+    <div class="sb-sub">ฝ่ายปราบปราม ศรป.</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-sec">เมนูหลัก</div>
+    <div class="sb-item active" onclick="showPage('dashboard',this)">📊 ภาพรวมการตรวจ</div>
+    <div class="sb-item" onclick="showPage('list',this)">🏭 รายการสถานประกอบการ</div>
+    <div class="sb-item" onclick="showPage('report',this)">📋 รายงานการตรวจ</div>
+    <div class="sb-item" onclick="showPage('map',this)">📍 แผนที่ GPS</div>
+    <div class="sb-sec" style="margin-top:10px">การจัดการ</div>
+    <div class="sb-item" onclick="showPage('settings',this)">⚙️ ตั้งค่าระบบ</div>
+  </nav>
+  <div class="sb-foot">ปีงบประมาณ 2569</div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-title" id="pageTitle">📊 แดชบอร์ดผลการดำเนินการตรวจสอบสถานประกอบการ</div>
+    <div class="topbar-right">
+      <span class="badge-year">ปีงบ 2569</span>
+      <button class="btn btn-ghost" onclick="loadData()">🔄 รีเฟรช</button>
+      <button class="btn btn-ghost" onclick="window.print()">🖨️ พิมพ์</button>
+    </div>
+  </header>
+
+  <!-- PAGE: DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="filterbar">
+      <span class="filter-lbl">กรอง :</span>
+      <select class="fsel" id="yearFilter" onchange="applyFilters()"><option value="all">ทุกปีงบ</option></select>
+      <select class="fsel" id="monthFilter" onchange="applyFilters()">
+        <option value="all">ทุกเดือน</option>
+        <option value="10">ต.ค.</option><option value="11">พ.ย.</option><option value="12">ธ.ค.</option>
+        <option value="1">ม.ค.</option><option value="2">ก.พ.</option><option value="3">มี.ค.</option>
+        <option value="4">เม.ย.</option><option value="5">พ.ค.</option><option value="6">มิ.ย.</option>
+        <option value="7">ก.ค.</option><option value="8">ส.ค.</option><option value="9">ก.ย.</option>
+      </select>
+      <select class="fsel" id="typeFilter" onchange="applyFilters()"><option value="all">ทุกประเภทสถานที่</option></select>
+      <select class="fsel" id="lawFilter" onchange="applyFilters()">
+        <option value="all">ทุก พ.ร.บ.</option>
+        <option value="drug">พ.ร.บ.ยา</option>
+        <option value="food">พ.ร.บ.อาหาร</option>
+        <option value="haz">พ.ร.บ.วัตถุอันตราย</option>
+        <option value="med">พ.ร.บ.เครื่องมือแพทย์</option>
+        <option value="cos">พ.ร.บ.เครื่องสำอาง</option>
+        <option value="herb">พ.ร.บ.สมุนไพร</option>
+        <option value="drug2">ประมวลยาเสพติด</option>
+      </select>
+      <div class="status-tag"><span class="dot"></span><span id="lastUpdate">กำลังโหลด...</span></div>
+    </div>
+    <div class="content">
+      <div class="err-box" id="errBox"></div>
+      <div class="kpi-grid">
+        <div class="kpi c-gold"><div class="kpi-lbl">ตรวจทั้งหมด</div><div class="kpi-val" id="kTot">—</div><div class="kpi-sub">ครั้ง</div><span class="kpi-ico">📋</span></div>
+        <div class="kpi c-green"><div class="kpi-lbl">มูลค่าของกลาง (ยึด)</div><div class="kpi-val" id="kSeize">—</div><div class="kpi-sub">บาท</div><span class="kpi-ico">💰</span></div>
+        <div class="kpi c-orange"><div class="kpi-lbl">มูลค่าของกลาง (อายัด)</div><div class="kpi-val" id="kFreeze">—</div><div class="kpi-sub">บาท</div><span class="kpi-ico">🔒</span></div>
+        <div class="kpi c-red"><div class="kpi-lbl">มูลค่ารวมยึด+อายัด</div><div class="kpi-val" id="kTotal">—</div><div class="kpi-sub">บาท</div><span class="kpi-ico">⚖️</span></div>
+        <div class="kpi"><div class="kpi-lbl">การแถลงข่าว</div><div class="kpi-val" id="kNews">—</div><div class="kpi-sub" id="kNewsSub">ครั้ง</div><span class="kpi-ico">📢</span></div>
+      </div>
+      <div class="charts-row">
+        <div class="card"><div class="card-hd"><div class="card-title"><div class="card-ico">📈</div>จำนวนการตรวจรายเดือน</div><span class="card-tag" id="monthlyTag">ปีงบ 2569</span></div><div class="chart-wrap"><canvas id="monthlyChart"></canvas></div></div>
+        <div class="card"><div class="card-hd"><div class="card-title"><div class="card-ico">⚖️</div>ความผิดตาม พ.ร.บ.</div><span class="card-tag" id="lawTag">—</span></div><div class="chart-wrap sm"><canvas id="lawChart"></canvas></div><div class="dleg" id="lawLegend"></div></div>
+        <div class="card"><div class="card-hd"><div class="card-title"><div class="card-ico">🏢</div>ประเภทสถานที่</div><span class="card-tag" id="placeTag">—</span></div><div class="chart-wrap sm"><canvas id="placeChart"></canvas></div><div class="dleg" id="placeLegend"></div></div>
+      </div>
+      <div class="bottom-row">
+        <div class="card"><div class="card-hd"><div class="card-title"><div class="card-ico">📋</div>รายการตรวจล่าสุด</div><span class="card-tag">20 รายการ</span></div>
+          <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>วันที่ตรวจ</th><th>สถานที่</th><th>ประเภท</th><th>จังหวัด</th><th style="text-align:right">มูลค่ารวม (บ.)</th><th>แถลงข่าว</th></tr></thead><tbody id="recentTbody"><tr><td colspan="6" class="loading">กำลังโหลด...</td></tr></tbody></table></div>
+        </div>
+        <div class="card"><div class="card-hd"><div class="card-title"><div class="card-ico">📊</div>สัดส่วนความผิดแต่ละ พ.ร.บ.</div></div><div id="lawProgress"><div class="loading">กำลังโหลด...</div></div></div>
+      </div>
+    </div>
+    <footer class="foot"><div class="foot-l">🏛️ ฝ่ายปราบปราม · ศูนย์จัดการเรื่องร้องเรียนและปราบปรามการกระทำผิดกฎหมายเกี่ยวกับผลิตภัณฑ์สุขภาพ (ศรป.)</div><span id="footCount">—</span></footer>
+  </div>
+
+  <!-- PAGE: LIST -->
+  <div class="page" id="page-list">
+    <div class="filterbar">
+      <span class="filter-lbl">ค้นหา :</span>
+      <input class="finput" id="listSearch" placeholder="ชื่อสถานที่, จังหวัด, keyword..." oninput="listPage=1;renderList()">
+      <select class="fsel" id="listYear" onchange="listPage=1;renderList()"><option value="all">ทุกปีงบ</option></select>
+      <select class="fsel" id="listType" onchange="listPage=1;renderList()"><option value="all">ทุกประเภท</option></select>
+      <select class="fsel" id="listProvince" onchange="listPage=1;renderList()"><option value="all">ทุกจังหวัด</option></select>
+      <select class="fsel" id="listLaw" onchange="listPage=1;renderList()">
+        <option value="all">ทุก พ.ร.บ.</option>
+        <option value="drug">พ.ร.บ.ยา</option><option value="food">พ.ร.บ.อาหาร</option>
+        <option value="haz">พ.ร.บ.วัตถุอันตราย</option><option value="med">พ.ร.บ.เครื่องมือแพทย์</option>
+        <option value="cos">พ.ร.บ.เครื่องสำอาง</option><option value="herb">พ.ร.บ.สมุนไพร</option>
+        <option value="drug2">ประมวลยาเสพติด</option>
+      </select>
+      <div class="status-tag"><span id="listCount">—</span></div>
+    </div>
+    <div class="content">
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr>
+              <th onclick="sortList('no')">ลำดับ ↕</th>
+              <th onclick="sortList('date')">วันที่ตรวจ ↕</th>
+              <th onclick="sortList('name')">ชื่อสถานที่ ↕</th>
+              <th onclick="sortList('type')">ประเภท ↕</th>
+              <th onclick="sortList('province')">จังหวัด ↕</th>
+              <th onclick="sortList('keyword')">Keyword</th>
+              <th onclick="sortList('risk')">ประเภทความเสี่ยง</th>
+              <th onclick="sortList('total')" style="text-align:right">มูลค่ารวม (บ.) ↕</th>
+              <th>ความผิดที่พบ (มาตรา)</th>
+              <th></th>
+            </tr></thead>
+            <tbody id="listTbody"><tr><td colspan="10" class="loading">กำลังโหลด...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="listPagination"></div>
+      </div>
+    </div>
+    <footer class="foot"><div class="foot-l">🏛️ ฝ่ายปราบปราม · ศรป.</div><span id="listFootCount">—</span></footer>
+  </div>
+
+  <!-- PAGE: REPORT -->
+  <div class="page" id="page-report">
+    <div class="filterbar">
+      <span class="filter-lbl">ค้นหา :</span>
+      <input class="finput" id="reportSearch" placeholder="ชื่อสถานที่, เลขรับ, keyword..." oninput="reportPage=1;renderReport()">
+      <select class="fsel" id="reportYear" onchange="reportPage=1;renderReport()"><option value="all">ทุกปีงบ</option></select>
+      <select class="fsel" id="reportLaw" onchange="reportPage=1;renderReport()">
+        <option value="all">ทุก พ.ร.บ.</option>
+        <option value="drug">พ.ร.บ.ยา</option><option value="food">พ.ร.บ.อาหาร</option>
+        <option value="haz">พ.ร.บ.วัตถุอันตราย</option><option value="med">พ.ร.บ.เครื่องมือแพทย์</option>
+        <option value="cos">พ.ร.บ.เครื่องสำอาง</option><option value="herb">พ.ร.บ.สมุนไพร</option>
+        <option value="drug2">ประมวลยาเสพติด</option>
+      </select>
+      <select class="fsel" id="reportNews" onchange="reportPage=1;renderReport()">
+        <option value="all">ทั้งหมด</option><option value="yes">มีแถลงข่าว</option><option value="no">ไม่มีแถลงข่าว</option>
+      </select>
+      <div class="status-tag"><span id="reportCount">—</span></div>
+    </div>
+    <div class="content">
+      <div id="reportCards" style="display:flex;flex-direction:column;gap:12px"><div class="loading">กำลังโหลด...</div></div>
+      <div class="pagination" id="reportPagination"></div>
+    </div>
+    <footer class="foot"><div class="foot-l">🏛️ ฝ่ายปราบปราม · ศรป.</div><span id="reportFootCount">—</span></footer>
+  </div>
+
+  <!-- PAGE: MAP -->
+  <div class="page" id="page-map">
+    <div class="map-info">
+      <span>📍 <strong id="mapCount">—</strong> จุดที่มีข้อมูล GPS</span>
+      <span style="color:var(--border)">|</span>
+      <span style="color:var(--muted)">คลิกที่หมุดเพื่อดูรายละเอียด</span>
+    </div>
+    <div id="mapContainer"></div>
+  </div>
+
+  <!-- PAGE: SETTINGS -->
+  <div class="page" id="page-settings">
+    <div class="content">
+      <div class="settings-wrap">
+        <div class="settings-card">
+          <div class="settings-title">🔗 ตั้งค่า Google Apps Script API</div>
+          <label class="form-lbl">Web App URL</label>
+          <input class="form-input" id="apiUrlInput" type="text" placeholder="https://script.google.com/macros/s/.../exec">
+          <div class="form-hint">ได้จาก Google Sheets → Extensions → Apps Script → Deploy → New deployment → Web app</div>
+          <div class="save-row">
+            <button class="btn btn-primary" onclick="saveApiUrl()">💾 บันทึก & โหลดใหม่</button>
+            <button class="btn btn-primary" onclick="testApiUrl()" style="background:var(--green)">🔌 ทดสอบการเชื่อมต่อ</button>
+            <span class="conn-status" id="connStatus"></span>
+          </div>
+        </div>
+        <div class="settings-card">
+          <div class="settings-title">ℹ️ สถานะระบบ</div>
+          <div style="font-size:13px;color:var(--muted);line-height:2">
+            <div>📊 ข้อมูลทั้งหมด: <strong id="settingTotal" style="color:var(--navy)">—</strong> รายการ</div>
+            <div>🕐 โหลดล่าสุด: <strong id="settingLastLoad" style="color:var(--navy)">—</strong></div>
+            <div style="font-size:11px;margin-top:4px">URL: <span id="settingApiUrl" style="word-break:break-all;color:var(--accent)">—</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="foot"><div class="foot-l">🏛️ ฝ่ายปราบปราม · ศรป.</div></footer>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('modalOverlay').classList.remove('open')">✕</button>
+    <div class="modal-title" id="modalTitle"></div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──
+let API_URL = localStorage.getItem('srp_api_url') || 'https://script.google.com/macros/s/AKfycbwLsK7mG93fWV2r5uALuatzl0drbVJQR5yiHS0YTZujY3b3VLF_Y9mplSy9beXNXX0/exec';
+const COL = {
+  NO:0,YEAR:1,REF:2,REF_NO:3,DATE_REC:4,DATE_INSPECT:5,LINK_NOTE:6,KEYWORD:7,
+  GK4:8,BKPCB:9,SBSS:10,SSJ:11,POLICE:12,OTHER_UNIT:13,
+  PLACE_TYPE:14,SHAPE:15,RISK_ISSUE:16,BLDG_NAME:17,
+  ADDR_NO:18,VILLAGE:19,MOO:20,SOI:21,ROAD:22,SUBDISTRICT:23,DISTRICT:24,PROVINCE:25,GPS:26,
+  PREFIX:27,FNAME:28,LNAME:29,ID_CARD:30,RISK_TYPE:31,
+  SEIZE_ITEMS:31,SEIZE_PCS:32,SEIZE_VAL:33,
+  FREEZE_ITEMS:34,FREEZE_PCS:35,FREEZE_VAL:36,
+  TOTAL_ITEMS:37,TOTAL_PCS:38,TOTAL_VAL:39,
+  PRESS:40,PRESS_LINK:41,RESULT:42,
+  LAW_DRUG:43,LAW_DRUG_SEC:44,LAW_FOOD:45,LAW_FOOD_SEC:46,
+  LAW_HAZ:47,LAW_HAZ_SEC:48,LAW_MED:49,LAW_MED_SEC:50,
+  LAW_COS:51,LAW_COS_SEC:52,LAW_HERB:53,LAW_HERB_SEC:54,
+  LAW_DRUG2:55,LAW_DRUG2_SEC:56,REMARK:57
+};
+const LAW_LABELS=[
+  {key:'drug',label:'พ.ร.บ.ยา',col:COL.LAW_DRUG,color:'#2055A4'},
+  {key:'food',label:'พ.ร.บ.อาหาร',col:COL.LAW_FOOD,color:'#1E8C5A'},
+  {key:'haz',label:'พ.ร.บ.วัตถุอันตราย',col:COL.LAW_HAZ,color:'#C0392B'},
+  {key:'med',label:'พ.ร.บ.เครื่องมือแพทย์',col:COL.LAW_MED,color:'#D68910'},
+  {key:'cos',label:'พ.ร.บ.เครื่องสำอาง',col:COL.LAW_COS,color:'#8E44AD'},
+  {key:'herb',label:'พ.ร.บ.สมุนไพร',col:COL.LAW_HERB,color:'#16A085'},
+  {key:'drug2',label:'ประมวลยาเสพติด',col:COL.LAW_DRUG2,color:'#E74C3C'},
+];
+Chart.defaults.font.family="'Sarabun', sans-serif";
+let allRows=[],filtered=[],listPage=1,reportPage=1;
+window._rows=()=>allRows; // debug helper
+let listSort={col:'date',asc:false};
+let leafletMap=null,mapInited=false;
+const PAGE_SIZE=25;
+
+// Charts
+const monthlyChart=new Chart(document.getElementById('monthlyChart'),{type:'bar',data:{labels:[],datasets:[{label:'จำนวนตรวจ',data:[],backgroundColor:'#2055A4',borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'#E8EEF8'},ticks:{font:{size:11}}},x:{grid:{display:false},ticks:{font:{size:11}}}}}});
+const lawChart=new Chart(document.getElementById('lawChart'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:LAW_LABELS.map(l=>l.color),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} ครั้ง`}}}}});
+const placeChart=new Chart(document.getElementById('placeChart'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:['#2055A4','#1E8C5A','#D68910','#C0392B','#8E44AD','#16A085','#E67E22','#2980B9'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} ครั้ง`}}}}});
+
+// Navigation
+function showPage(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  const t={dashboard:'📊 แดชบอร์ดผลการดำเนินการตรวจสอบสถานประกอบการ',list:'🏭 รายการสถานประกอบการทั้งหมด',report:'📋 รายงานการตรวจรายเคส',map:'📍 แผนที่ตำแหน่งการตรวจ GPS',settings:'⚙️ ตั้งค่าระบบ'};
+  document.getElementById('pageTitle').textContent=t[id]||'';
+  if(id==='list')renderList();
+  if(id==='report')renderReport();
+  if(id==='map')initMap();
+  if(id==='settings'){document.getElementById('apiUrlInput').value=API_URL;document.getElementById('settingTotal').textContent=allRows.length.toLocaleString();document.getElementById('settingApiUrl').textContent=API_URL;}
+}
+
+// Load data
+async function loadData(){
+  document.getElementById('lastUpdate').textContent='กำลังโหลด...';
+  document.getElementById('errBox').style.display='none';
+  try{
+    const res=await fetch(API_URL);
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const json=await res.json();
+    allRows=json.slice(2).filter(r=>r[COL.NO]!==''&&r[COL.NO]!==null&&r[COL.NO]!==undefined);
+    const years=[...new Set(allRows.map(r=>r[COL.YEAR]).filter(Boolean))].sort();
+    const types=[...new Set(allRows.map(r=>r[COL.PLACE_TYPE]).filter(Boolean))].sort();
+    const provs=[...new Set(allRows.map(r=>r[COL.PROVINCE]).filter(Boolean))].sort();
+    ['yearFilter','listYear','reportYear'].forEach(id=>{
+      const el=document.getElementById(id),cur=el.value;
+      el.innerHTML='<option value="all">ทุกปีงบ</option>'+years.map(y=>`<option value="${y}">ปีงบ ${y}</option>`).join('');
+      if(cur!=='all')el.value=cur;
+    });
+    ['typeFilter','listType'].forEach(id=>{
+      document.getElementById(id).innerHTML='<option value="all">ทุกประเภท</option>'+types.map(t=>`<option value="${t}">${t}</option>`).join('');
+    });
+    document.getElementById('listProvince').innerHTML='<option value="all">ทุกจังหวัด</option>'+provs.map(p=>`<option value="${p}">${p}</option>`).join('');
+    applyFilters();
+    const now=new Date().toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'});
+    document.getElementById('lastUpdate').textContent='อัปเดต '+now;
+    document.getElementById('settingLastLoad').textContent=now;
+    document.getElementById('settingTotal').textContent=allRows.length.toLocaleString();
+    document.getElementById('settingApiUrl').textContent=API_URL;
+  }catch(err){
+    document.getElementById('errBox').textContent='❌ โหลดข้อมูลไม่ได้: '+err.message;
+    document.getElementById('errBox').style.display='block';
+    document.getElementById('lastUpdate').textContent='โหลดไม่สำเร็จ';
+  }
+}
+
+// Helpers
+function parseDate(v){
+  if(!v)return null;if(v instanceof Date)return v;
+  const s=String(v).trim(),m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if(m){let y=parseInt(m[3]);if(y>2400)y-=543;return new Date(y,parseInt(m[2])-1,parseInt(m[1]));}
+  const d=new Date(v);return isNaN(d)?null:d;
+}
+function fmtDate(v){
+  const d=parseDate(v);if(!d)return v||'—';
+  const ms=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${String(d.getDate()).padStart(2,'0')} ${ms[d.getMonth()]} ${d.getFullYear()}`;
+}
+function parseNum(v){if(v===null||v===undefined||v==='')return 0;if(typeof v==='number')return v;const n=parseFloat(String(v).replace(/[฿\s,]/g,'').replace(/[^0-9.\-]/g,''));return isNaN(n)?0:n;}
+function fmtMoney(v){return parseNum(v).toLocaleString('th-TH',{minimumFractionDigits:0,maximumFractionDigits:0});}
+function sumCol(rows,col){return rows.reduce((s,r)=>s+parseNum(r[col]),0);}
+function hasVal(v){return v&&String(v).trim()!==''&&String(v).trim().toLowerCase()!=='ไม่มี'&&String(v).trim()!=='-';}
+
+// Dashboard
+function applyFilters(){
+  const yr=document.getElementById('yearFilter').value;
+  const mo=document.getElementById('monthFilter').value;
+  const pt=document.getElementById('typeFilter').value;
+  const lw=document.getElementById('lawFilter').value;
+  const SEC_MAP={drug:COL.LAW_DRUG_SEC,food:COL.LAW_FOOD_SEC,haz:COL.LAW_HAZ_SEC,med:COL.LAW_MED_SEC,cos:COL.LAW_COS_SEC,herb:COL.LAW_HERB_SEC,drug2:COL.LAW_DRUG2_SEC};
+  filtered=allRows.filter(r=>{
+    if(yr!=='all'&&String(r[COL.YEAR])!==String(yr))return false;
+    if(mo!=='all'){const d=parseDate(r[COL.DATE_INSPECT]);if(!d||String(d.getMonth()+1)!==mo)return false;}
+    if(pt!=='all'&&r[COL.PLACE_TYPE]!==pt)return false;
+    if(lw!=='all'&&!hasVal(r[SEC_MAP[lw]]))return false;
+    return true;
+  });
+  renderDashboard();
+}
+
+function renderDashboard(){
+  const rows=filtered;
+  document.getElementById('kTot').textContent=rows.length.toLocaleString();
+  const seize=sumCol(rows,COL.SEIZE_VAL),freeze=sumCol(rows,COL.FREEZE_VAL);
+  const total=sumCol(rows,COL.TOTAL_VAL)||(seize+freeze);
+  document.getElementById('kSeize').textContent=fmtMoney(seize);
+  document.getElementById('kFreeze').textContent=fmtMoney(freeze);
+  document.getElementById('kTotal').textContent=fmtMoney(total);
+  const nc=rows.filter(r=>hasVal(r[COL.PRESS])).length;
+  document.getElementById('kNews').textContent=nc.toLocaleString();
+  document.getElementById('kNewsSub').textContent=`ครั้ง (${rows.length?((nc/rows.length)*100).toFixed(0):0}%)`;
+  // Monthly
+  const cnt=Array(12).fill(0);
+  rows.forEach(r=>{const d=parseDate(r[COL.DATE_INSPECT]);if(d)cnt[d.getMonth()]++;});
+  const fo=[9,10,11,0,1,2,3,4,5,6,7,8];
+  const ml=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  monthlyChart.data.labels=fo.map(i=>ml[i]);
+  monthlyChart.data.datasets[0].data=fo.map(i=>cnt[i]);
+  monthlyChart.update();
+  // Law — นับเฉพาะที่มีมาตราความผิด
+  const SEC_COL={LAW_DRUG:COL.LAW_DRUG_SEC,LAW_FOOD:COL.LAW_FOOD_SEC,LAW_HAZ:COL.LAW_HAZ_SEC,LAW_MED:COL.LAW_MED_SEC,LAW_COS:COL.LAW_COS_SEC,LAW_HERB:COL.LAW_HERB_SEC,LAW_DRUG2:COL.LAW_DRUG2_SEC};
+  const lc=LAW_LABELS.map(l=>{const secCol=Object.entries(SEC_COL).find(([k])=>COL[k]===l.col);return secCol?rows.filter(r=>hasVal(r[secCol[1]])).length:0;});
+  lawChart.data.labels=LAW_LABELS.map(l=>l.label);
+  lawChart.data.datasets[0].data=lc;lawChart.update();
+  document.getElementById('lawTag').textContent=lc.reduce((a,b)=>a+b,0)+' ครั้ง';
+  const lt=lc.reduce((a,b)=>a+b,0)||1;
+  document.getElementById('lawLegend').innerHTML=LAW_LABELS.map((l,i)=>`<div class="dleg-row"><div class="dleg-l"><div class="dleg-dot" style="background:${l.color}"></div><span style="font-size:11px">${l.label}</span></div><span class="dleg-val">${lc[i]} (${((lc[i]/lt)*100).toFixed(0)}%)</span></div>`).join('');
+  // Place
+  const pc={};rows.forEach(r=>{if(r[COL.PLACE_TYPE])pc[r[COL.PLACE_TYPE]]=(pc[r[COL.PLACE_TYPE]]||0)+1;});
+  const pe=Object.entries(pc).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  placeChart.data.labels=pe.map(e=>e[0]);placeChart.data.datasets[0].data=pe.map(e=>e[1]);placeChart.update();
+  document.getElementById('placeTag').textContent=pe.length+' ประเภท';
+  const plc=['#2055A4','#1E8C5A','#D68910','#C0392B','#8E44AD','#16A085','#E67E22','#2980B9'];
+  const ptot=pe.reduce((a,e)=>a+e[1],0)||1;
+  document.getElementById('placeLegend').innerHTML=pe.map((e,i)=>`<div class="dleg-row"><div class="dleg-l"><div class="dleg-dot" style="background:${plc[i%plc.length]}"></div><span style="font-size:11px">${e[0]||'ไม่ระบุ'}</span></div><span class="dleg-val">${e[1]} (${((e[1]/ptot)*100).toFixed(0)}%)</span></div>`).join('');
+  // Recent table
+  const sorted=[...rows].sort((a,b)=>{const da=parseDate(a[COL.DATE_INSPECT]),db=parseDate(b[COL.DATE_INSPECT]);if(!da&&!db)return 0;if(!da)return 1;if(!db)return-1;return db-da;}).slice(0,20);
+  document.getElementById('recentTbody').innerHTML=sorted.length?sorted.map(r=>{
+    const tv=parseNum(r[COL.TOTAL_VAL]);const hn=hasVal(r[COL.PRESS]);
+    return `<tr onclick="openDetail(${r[COL.NO]})"><td style="white-space:nowrap;font-size:11px">${fmtDate(r[COL.DATE_INSPECT])}</td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[COL.BLDG_NAME]||''}">${r[COL.BLDG_NAME]||'—'}</td><td style="font-size:11px">${r[COL.PLACE_TYPE]||'—'}</td><td style="font-size:11px">${r[COL.PROVINCE]||'—'}</td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px;text-align:right">${tv>0?fmtMoney(tv):'—'}</td><td><span class="sbadge ${hn?'s-y':'s-n'}">${hn?'✓ มี':'✗ ไม่มี'}</span></td></tr>`;
+  }).join(''):'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">ไม่พบข้อมูล</td></tr>';
+  // Law progress
+  const lm=Math.max(...lc,1);
+  document.getElementById('lawProgress').innerHTML=LAW_LABELS.map((l,i)=>`<div class="prog-item"><div class="prog-hd"><span style="font-size:12px">${l.label}</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:11.5px;color:var(--navy)">${lc[i]} ครั้ง</span></div><div class="prog-bar"><div class="prog-fill" style="width:${(lc[i]/lm*100).toFixed(1)}%;background:${l.color}"></div></div><div class="prog-sub">${lt>0?((lc[i]/lt)*100).toFixed(1):0}% ของทั้งหมด</div></div>`).join('');
+  document.getElementById('footCount').textContent=`แสดง ${rows.length.toLocaleString()} / ${allRows.length.toLocaleString()} รายการ`;
+}
+
+// List page
+function getListRows(){
+  const q=document.getElementById('listSearch').value.toLowerCase();
+  const yr=document.getElementById('listYear').value;
+  const tp=document.getElementById('listType').value;
+  const pv=document.getElementById('listProvince').value;
+  const lw=document.getElementById('listLaw').value;
+  const SEC_MAP={drug:COL.LAW_DRUG_SEC,food:COL.LAW_FOOD_SEC,haz:COL.LAW_HAZ_SEC,med:COL.LAW_MED_SEC,cos:COL.LAW_COS_SEC,herb:COL.LAW_HERB_SEC,drug2:COL.LAW_DRUG2_SEC};
+  return allRows.filter(r=>{
+    if(yr!=='all'&&String(r[COL.YEAR])!==String(yr))return false;
+    if(tp!=='all'&&r[COL.PLACE_TYPE]!==tp)return false;
+    if(pv!=='all'&&r[COL.PROVINCE]!==pv)return false;
+    if(lw!=='all'&&!hasVal(r[SEC_MAP[lw]]))return false;
+    if(q){const s=`${r[COL.BLDG_NAME]||''} ${r[COL.PLACE_TYPE]||''} ${r[COL.PROVINCE]||''} ${r[COL.RISK_TYPE]||''} ${r[COL.KEYWORD]||''}`.toLowerCase();if(!s.includes(q))return false;}
+    return true;
+  });
+}
+function sortList(col){
+  if(listSort.col===col)listSort.asc=!listSort.asc;else{listSort.col=col;listSort.asc=true;}
+  listPage=1;renderList();
+}
+function renderList(){
+  let rows=getListRows();
+  const {col,asc}=listSort;
+  rows.sort((a,b)=>{
+    if(col==='date'){const da=parseDate(a[COL.DATE_INSPECT])||new Date(0),db=parseDate(b[COL.DATE_INSPECT])||new Date(0);return asc?da-db:db-da;}
+    if(col==='total'){return asc?parseNum(a[COL.TOTAL_VAL])-parseNum(b[COL.TOTAL_VAL]):parseNum(b[COL.TOTAL_VAL])-parseNum(a[COL.TOTAL_VAL]);}
+    if(col==='no'){return asc?parseNum(a[COL.NO])-parseNum(b[COL.NO]):parseNum(b[COL.NO])-parseNum(a[COL.NO]);}
+    const fm={name:COL.BLDG_NAME,type:COL.PLACE_TYPE,province:COL.PROVINCE,risk:COL.RISK_TYPE,keyword:COL.KEYWORD};
+    const va=String(a[fm[col]]||''),vb=String(b[fm[col]]||'');
+    return asc?va.localeCompare(vb,'th'):vb.localeCompare(va,'th');
+  });
+  document.getElementById('listCount').textContent=rows.length.toLocaleString()+' รายการ';
+  document.getElementById('listFootCount').textContent=`แสดง ${rows.length.toLocaleString()} / ${allRows.length.toLocaleString()} รายการ`;
+  const pages=Math.ceil(rows.length/PAGE_SIZE)||1;if(listPage>pages)listPage=1;
+  const slice=rows.slice((listPage-1)*PAGE_SIZE,listPage*PAGE_SIZE);
+  document.getElementById('listTbody').innerHTML=slice.length?slice.map(r=>{
+    const tv=parseNum(r[COL.TOTAL_VAL]);const hn=hasVal(r[COL.PRESS]);
+    // แสดงเฉพาะ พ.ร.บ. ที่มีการกรอกมาตราความผิด
+    const SEC_MAP={LAW_DRUG:COL.LAW_DRUG_SEC,LAW_FOOD:COL.LAW_FOOD_SEC,LAW_HAZ:COL.LAW_HAZ_SEC,LAW_MED:COL.LAW_MED_SEC,LAW_COS:COL.LAW_COS_SEC,LAW_HERB:COL.LAW_HERB_SEC,LAW_DRUG2:COL.LAW_DRUG2_SEC};
+    const al=LAW_LABELS.filter(l=>hasVal(r[SEC_MAP[Object.keys(SEC_MAP).find(k=>COL[k]===l.col)]]));
+    const chips=al.length?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px">${al.map(l=>`<span class="law-chip" style="background:${l.color};font-size:10px;padding:1px 7px">${l.label}</span>`).join('')}</div>`:'<span style="font-size:11px;color:var(--muted)">—</span>';
+    return `<tr onclick="openDetail(${r[COL.NO]})"><td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${r[COL.NO]||'—'}</td><td style="white-space:nowrap;font-size:11px">${fmtDate(r[COL.DATE_INSPECT])}</td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[COL.BLDG_NAME]||''}">${r[COL.BLDG_NAME]||'—'}</td><td style="font-size:11px">${r[COL.PLACE_TYPE]||'—'}</td><td style="font-size:11px">${r[COL.PROVINCE]||'—'}</td><td style="font-size:11px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[COL.KEYWORD]||''}">${r[COL.KEYWORD]||'—'}</td><td style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r[COL.RISK_TYPE]||'—'}</td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px;text-align:right">${tv>0?fmtMoney(tv):'—'}</td><td>${chips}</td><td><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openDetail(${r[COL.NO]})">ดู</button></td></tr>`;
+  }).join(''):'<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--muted)">ไม่พบข้อมูล</td></tr>';
+  renderPagination('listPagination',listPage,pages,p=>{listPage=p;renderList();});
+}
+
+// Report page
+function getReportRows(){
+  const q=document.getElementById('reportSearch').value.toLowerCase();
+  const yr=document.getElementById('reportYear').value;
+  const lw=document.getElementById('reportLaw').value;
+  const nw=document.getElementById('reportNews').value;
+  const lmap={drug:COL.LAW_DRUG_SEC,food:COL.LAW_FOOD_SEC,haz:COL.LAW_HAZ_SEC,med:COL.LAW_MED_SEC,cos:COL.LAW_COS_SEC,herb:COL.LAW_HERB_SEC,drug2:COL.LAW_DRUG2_SEC};
+  return allRows.filter(r=>{
+    if(yr!=='all'&&String(r[COL.YEAR])!==String(yr))return false;
+    if(lw!=='all'&&!hasVal(r[lmap[lw]]))return false;
+    if(nw==='yes'&&!hasVal(r[COL.PRESS]))return false;
+    if(nw==='no'&&hasVal(r[COL.PRESS]))return false;
+    if(q){const s=`${r[COL.BLDG_NAME]||''} ${r[COL.REF_NO]||''} ${r[COL.KEYWORD]||''} ${r[COL.RISK_ISSUE]||''} ${r[COL.PROVINCE]||''}`.toLowerCase();if(!s.includes(q))return false;}
+    return true;
+  });
+}
+function renderReport(){
+  const rows=getReportRows();
+  document.getElementById('reportCount').textContent=rows.length.toLocaleString()+' รายการ';
+  document.getElementById('reportFootCount').textContent=rows.length.toLocaleString()+' รายการ';
+  const pages=Math.ceil(rows.length/PAGE_SIZE)||1;if(reportPage>pages)reportPage=1;
+  const slice=rows.slice((reportPage-1)*PAGE_SIZE,reportPage*PAGE_SIZE);
+  document.getElementById('reportCards').innerHTML=slice.length?slice.map(r=>{
+    const tv=parseNum(r[COL.TOTAL_VAL]);const hn=hasVal(r[COL.PRESS]);
+    const SEC_MAP2={LAW_DRUG:COL.LAW_DRUG_SEC,LAW_FOOD:COL.LAW_FOOD_SEC,LAW_HAZ:COL.LAW_HAZ_SEC,LAW_MED:COL.LAW_MED_SEC,LAW_COS:COL.LAW_COS_SEC,LAW_HERB:COL.LAW_HERB_SEC,LAW_DRUG2:COL.LAW_DRUG2_SEC};
+    const al=LAW_LABELS.filter(l=>{const k=Object.keys(SEC_MAP2).find(k=>COL[k]===l.col);return k&&hasVal(r[SEC_MAP2[k]]);});
+    const addr=[r[COL.ADDR_NO],r[COL.SOI]?'ซ.'+r[COL.SOI]:'',r[COL.ROAD]?'ถ.'+r[COL.ROAD]:'',r[COL.SUBDISTRICT],r[COL.DISTRICT],r[COL.PROVINCE]].filter(Boolean).join(' ');
+    return `<div class="card" style="padding:16px;cursor:pointer;margin-bottom:0" onclick="openDetail(${r[COL.NO]})">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:4px">${r[COL.BLDG_NAME]||'ไม่ระบุชื่อ'}</div>
+          <div style="font-size:11.5px;color:var(--muted);margin-bottom:6px">📍 ${addr||'—'}</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)">
+            <span>📅 ${fmtDate(r[COL.DATE_INSPECT])}</span>
+            <span>🏢 ${r[COL.PLACE_TYPE]||'—'}</span>
+            <span>📋 ${r[COL.REF_NO]||'—'}</span>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          ${tv>0?`<div style="font-size:17px;font-weight:700;color:var(--red);font-family:'IBM Plex Mono',monospace">${fmtMoney(tv)}</div><div style="font-size:10px;color:var(--muted)">บาท (ยึด+อายัด)</div>`:''}
+          <div style="margin-top:6px"><span class="sbadge ${hn?'s-y':'s-n'}">${hn?'📢 แถลงข่าวแล้ว':'ไม่มีแถลงข่าว'}</span></div>
+        </div>
+      </div>
+      ${al.length?`<div class="law-chips" style="margin-top:10px">${al.map(l=>`<span class="law-chip" style="background:${l.color}">${l.label}</span>`).join('')}</div>`:''}
+      ${r[COL.KEYWORD]?`<div style="margin-top:6px;font-size:11.5px;color:var(--muted)">🔑 ${r[COL.KEYWORD]}</div>`:''}
+    </div>`;
+  }).join(''):'<div class="loading">ไม่พบข้อมูล</div>';
+  renderPagination('reportPagination',reportPage,pages,p=>{reportPage=p;renderReport();});
+}
+
+// Pagination
+function renderPagination(id,cur,total,cb){
+  const el=document.getElementById(id);
+  if(total<=1){el.innerHTML='';return;}
+  let btns='';
+  for(let i=1;i<=total;i++){
+    if(i===1||i===total||Math.abs(i-cur)<=2)btns+=`<button class="pag-btn${i===cur?' active':''}" onclick="(${cb.toString()})(${i})">${i}</button>`;
+    else if(Math.abs(i-cur)===3)btns+='<span style="padding:0 4px;color:var(--muted)">…</span>';
+  }
+  el.innerHTML=`<span>หน้า ${cur} / ${total}</span><div class="pag-btns">${btns}</div>`;
+}
+
+// Detail modal
+function openDetail(no){
+  const r=allRows.find(row=>String(row[COL.NO])===String(no));if(!r)return;
+  const addr=[r[COL.ADDR_NO],r[COL.VILLAGE]?'หมู่บ้าน'+r[COL.VILLAGE]:'',r[COL.MOO]?'หมู่'+r[COL.MOO]:'',r[COL.SOI]?'ซ.'+r[COL.SOI]:'',r[COL.ROAD]?'ถ.'+r[COL.ROAD]:'',r[COL.SUBDISTRICT],r[COL.DISTRICT],r[COL.PROVINCE]].filter(Boolean).join(' ');
+  const SEC_MAP3={LAW_DRUG:COL.LAW_DRUG_SEC,LAW_FOOD:COL.LAW_FOOD_SEC,LAW_HAZ:COL.LAW_HAZ_SEC,LAW_MED:COL.LAW_MED_SEC,LAW_COS:COL.LAW_COS_SEC,LAW_HERB:COL.LAW_HERB_SEC,LAW_DRUG2:COL.LAW_DRUG2_SEC};
+  const al=LAW_LABELS.filter(l=>{const k=Object.keys(SEC_MAP3).find(k=>COL[k]===l.col);return k&&hasVal(r[SEC_MAP3[k]]);});
+  const tv=parseNum(r[COL.TOTAL_VAL]),sv=parseNum(r[COL.SEIZE_VAL]),fv=parseNum(r[COL.FREEZE_VAL]);
+  document.getElementById('modalTitle').textContent=`📋 #${r[COL.NO]} — ${r[COL.BLDG_NAME]||'ไม่ระบุชื่อ'}`;
+  document.getElementById('modalBody').innerHTML=`<div class="detail-grid">
+    <div class="detail-item"><div class="detail-lbl">วันที่ตรวจ</div><div class="detail-val">${fmtDate(r[COL.DATE_INSPECT])}</div></div>
+    <div class="detail-item"><div class="detail-lbl">ปีงบประมาณ</div><div class="detail-val">${r[COL.YEAR]||'—'}</div></div>
+    <div class="detail-item"><div class="detail-lbl">เลขรับ</div><div class="detail-val">${r[COL.REF_NO]||'—'}</div></div>
+    <div class="detail-item"><div class="detail-lbl">ต้นเรื่อง</div><div class="detail-val">${r[COL.REF]||'—'}</div></div>
+    <div class="detail-item detail-full"><div class="detail-lbl">ชื่ออาคาร/บริษัท</div><div class="detail-val">${r[COL.BLDG_NAME]||'—'}</div></div>
+    <div class="detail-item detail-full"><div class="detail-lbl">ที่อยู่</div><div class="detail-val">${addr||'—'}</div></div>
+    <div class="detail-item"><div class="detail-lbl">ประเภทสถานที่</div><div class="detail-val">${r[COL.PLACE_TYPE]||'—'}</div></div>
+    <div class="detail-item"><div class="detail-lbl">จังหวัด</div><div class="detail-val">${r[COL.PROVINCE]||'—'}</div></div>
+    <div class="detail-item"><div class="detail-lbl">ประเภทความเสี่ยง</div><div class="detail-val">${r[COL.RISK_TYPE]||'—'}</div></div>
+    <div class="detail-item"><div class="detail-lbl">ประเด็นความเสี่ยง</div><div class="detail-val">${r[COL.RISK_ISSUE]||'—'}</div></div>
+    <div class="detail-item"><div class="detail-lbl">มูลค่ายึด</div><div class="detail-val" style="color:var(--green);font-weight:700">${sv>0?fmtMoney(sv)+' บาท':'—'}</div></div>
+    <div class="detail-item"><div class="detail-lbl">มูลค่าอายัด</div><div class="detail-val" style="color:var(--orange);font-weight:700">${fv>0?fmtMoney(fv)+' บาท':'—'}</div></div>
+    <div class="detail-item detail-full"><div class="detail-lbl">มูลค่ารวมยึด+อายัด</div><div class="detail-val" style="color:var(--red);font-weight:700;font-size:16px">${tv>0?fmtMoney(tv)+' บาท':'—'}</div></div>
+    <div class="detail-item"><div class="detail-lbl">การแถลงข่าว</div><div class="detail-val">${r[COL.PRESS]||'—'}${r[COL.PRESS_LINK]?` <a href="${r[COL.PRESS_LINK]}" target="_blank" style="color:var(--accent)">🔗 ลิงก์</a>`:''}</div></div>
+    <div class="detail-item"><div class="detail-lbl">GPS</div><div class="detail-val" style="font-size:11.5px">${r[COL.GPS]||'—'}</div></div>
+    ${al.length?`<div class="detail-item detail-full"><div class="detail-lbl">ความผิดที่พบ</div><div class="law-chips">${al.map(l=>`<span class="law-chip" style="background:${l.color}">${l.label}</span>`).join('')}</div></div>`:''}
+    ${r[COL.KEYWORD]?`<div class="detail-item detail-full"><div class="detail-lbl">Keyword</div><div class="detail-val">${r[COL.KEYWORD]}</div></div>`:''}
+    ${r[COL.LINK_NOTE]?`<div class="detail-item detail-full"><div class="detail-lbl">ลิงก์บันทึกตรวจ</div><div class="detail-val"><a href="${r[COL.LINK_NOTE]}" target="_blank" style="color:var(--accent)">🔗 เปิดเอกสาร</a></div></div>`:''}
+    ${r[COL.REMARK]?`<div class="detail-item detail-full"><div class="detail-lbl">หมายเหตุ</div><div class="detail-val">${r[COL.REMARK]}</div></div>`:''}
+  </div>`;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(e){if(e.target===document.getElementById('modalOverlay'))document.getElementById('modalOverlay').classList.remove('open');}
+
+// Map
+function parseGPS(v){
+  if(!v)return null;
+  const s=String(v).trim();
+  // รูปแบบ: "13.756331, 100.501762" หรือ "13.756331,100.501762"
+  let m=s.match(/(-?\d{1,3}\.?\d*)[,\s]+(-?\d{1,3}\.?\d*)/);
+  if(m){
+    const lat=parseFloat(m[1]),lng=parseFloat(m[2]);
+    if(lat>=-90&&lat<=90&&lng>=-180&&lng<=180&&!(lat===0&&lng===0))return[lat,lng];
+  }
+  // รูปแบบ URL Google Maps: "@13.756,100.501"
+  m=s.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+  if(m){const lat=parseFloat(m[1]),lng=parseFloat(m[2]);if(lat>=-90&&lat<=90&&lng>=-180&&lng<=180)return[lat,lng];}
+  // รูปแบบ DMS: "13°45'22"N 100°30'6"E"
+  m=s.match(/(\d+)[°]\s*(\d+)['\s]\s*(\d*\.?\d*)["\s]*([NS])[,\s]+(\d+)[°]\s*(\d+)['\s]\s*(\d*\.?\d*)["\s]*([EW])/i);
+  if(m){
+    let lat=parseFloat(m[1])+parseFloat(m[2])/60+parseFloat(m[3]||0)/3600;
+    let lng=parseFloat(m[5])+parseFloat(m[6])/60+parseFloat(m[7]||0)/3600;
+    if(m[4].toUpperCase()==='S')lat=-lat;
+    if(m[8].toUpperCase()==='W')lng=-lng;
+    return[lat,lng];
+  }
+  return null;
+}
+function initMap(){
+  if(!mapInited){
+    leafletMap=L.map('mapContainer').setView([13.75,100.5],6);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{attribution:'© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>',subdomains:'abcd',maxZoom:19}).addTo(leafletMap);
+    mapInited=true;
+  }
+  leafletMap.eachLayer(l=>{if(l instanceof L.Marker||l instanceof L.CircleMarker)leafletMap.removeLayer(l);});
+  const rows=allRows.filter(r=>r[COL.GPS]&&String(r[COL.GPS]).trim()!=='');
+  console.log('GPS raw samples:', rows.slice(0,5).map(r=>r[COL.GPS]));
+  const validRows=rows.filter(r=>parseGPS(r[COL.GPS]));
+  console.log('Valid GPS count:', validRows.length, '/', rows.length);
+  document.getElementById('mapCount').textContent=validRows.length.toLocaleString();
+  const pts=[];
+  validRows.forEach(r=>{
+    const gps=parseGPS(r[COL.GPS]);if(!gps)return;
+    pts.push(gps);
+    const tv=parseNum(r[COL.TOTAL_VAL]);
+    const popup=`<b>${r[COL.BLDG_NAME]||'ไม่ระบุ'}</b><br>${r[COL.PLACE_TYPE]||''} · ${r[COL.PROVINCE]||''}<br>📅 ${fmtDate(r[COL.DATE_INSPECT])}${tv>0?`<br>💰 ${fmtMoney(tv)} บาท`:''}`;
+    L.marker(gps).addTo(leafletMap).bindPopup(popup);
+  });
+  if(pts.length>0)leafletMap.fitBounds(pts,{padding:[40,40]});
+  setTimeout(()=>leafletMap.invalidateSize(),200);
+}
+
+// Settings
+function saveApiUrl(){
+  const url=document.getElementById('apiUrlInput').value.trim();
+  if(!url){alert('กรุณาใส่ URL');return;}
+  API_URL=url;localStorage.setItem('srp_api_url',url);
+  document.getElementById('connStatus').textContent='💾 บันทึกแล้ว กำลังโหลดข้อมูล...';
+  document.getElementById('connStatus').className='conn-status conn-ok';
+  loadData();
+}
+async function testApiUrl(){
+  const url=document.getElementById('apiUrlInput').value.trim()||API_URL;
+  document.getElementById('connStatus').textContent='⏳ กำลังทดสอบ...';
+  document.getElementById('connStatus').className='conn-status';
+  try{
+    const r=await fetch(url);const j=await r.json();
+    document.getElementById('connStatus').textContent=`✅ สำเร็จ (${(j.length-2).toLocaleString()} แถว)`;
+    document.getElementById('connStatus').className='conn-status conn-ok';
+  }catch(e){
+    document.getElementById('connStatus').textContent='❌ เชื่อมต่อไม่ได้: '+e.message;
+    document.getElementById('connStatus').className='conn-status conn-err';
+  }
+}
+
+loadData();
+</script>
+</body>
+</html>
