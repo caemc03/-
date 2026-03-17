@@ -118,41 +118,6 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 .kpi:nth-child(1){animation-delay:.04s}.kpi:nth-child(2){animation-delay:.08s}
 .kpi:nth-child(3){animation-delay:.12s}.kpi:nth-child(4){animation-delay:.16s}.kpi:nth-child(5){animation-delay:.20s}
-
-/* ── Mobile Responsive ── */
-.hamburger{display:none;background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:4px 8px}
-.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99}
-.sidebar-overlay.open{display:block}
-
-@media(max-width:768px){
-  :root{--sw:0px}
-  .sidebar{transform:translateX(-230px);width:230px;transition:transform .25s ease;z-index:200}
-  .sidebar.open{transform:translateX(0)}
-  .hamburger{display:block}
-  .main{margin-left:0}
-  .topbar{padding:0 14px}
-  .topbar-title{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
-  .badge-year{display:none}
-  .topbar-right .btn-ghost:last-child{display:none}
-  .filterbar{padding:8px 12px;gap:6px}
-  .fsel,.finput{font-size:11.5px;padding:4px 7px}
-  .content{padding:12px 12px;gap:12px}
-  .kpi-grid{grid-template-columns:repeat(2,1fr);gap:10px}
-  .kpi:nth-child(5){grid-column:1/-1}
-  .kpi-val{font-size:18px}
-  .charts-row{grid-template-columns:1fr;gap:10px}
-  .bottom-row{grid-template-columns:1fr;gap:10px}
-  .tbl{font-size:11px}
-  .tbl th,.tbl td{padding:6px 7px}
-  .tbl th:nth-child(n+5){display:none}
-  .tbl td:nth-child(n+5){display:none}
-  .foot{flex-direction:column;gap:4px;text-align:center;padding:10px 12px}
-  .foot-l{font-size:10px}
-  .settings-wrap{padding:14px}
-  #mapContainer{height:calc(100vh - 160px)}
-  .map-info{padding:8px 12px;font-size:11px}
-  .pagination{flex-direction:column;gap:6px;align-items:flex-start}
-}
 </style>
 </head>
 <body>
@@ -177,10 +142,7 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
 
 <div class="main">
   <header class="topbar">
-    <div style="display:flex;align-items:center;gap:10px">
-      <button class="hamburger" onclick="toggleSidebar()">☰</button>
-      <div class="topbar-title" id="pageTitle">📊 แดชบอร์ดผลการดำเนินการตรวจสอบสถานประกอบการ</div>
-    </div>
+    <div class="topbar-title" id="pageTitle">📊 แดชบอร์ดผลการดำเนินการตรวจสอบสถานประกอบการ</div>
     <div class="topbar-right">
       <span class="badge-year">ปีงบ 2569</span>
       <button class="btn btn-ghost" onclick="loadData()">🔄 รีเฟรช</button>
@@ -352,8 +314,6 @@ body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </div>
 
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-
 <script>
 // ── CONFIG ──
 let API_URL = localStorage.getItem('srp_api_url') || 'https://script.google.com/macros/s/AKfycbwLsK7mG93fWV2r5uALuatzl0drbVJQR5yiHS0YTZujY3b3VLF_Y9mplSy9beXNXX0/exec';
@@ -361,25 +321,25 @@ const COL = {
   NO:0,YEAR:1,REF:2,REF_NO:3,DATE_REC:4,DATE_INSPECT:5,LINK_NOTE:6,KEYWORD:7,
   GK4:8,BKPCB:9,SBSS:10,SSJ:11,POLICE:12,OTHER_UNIT:13,
   PLACE_TYPE:14,SHAPE:15,RISK_ISSUE:16,BLDG_NAME:17,
-  ADDR_NO:18,VILLAGE:19,MOO:19,SOI:19,ROAD:20,SUBDISTRICT:21,DISTRICT:22,PROVINCE:23,GPS:24,
-  PREFIX:25,FNAME:26,LNAME:27,ID_CARD:28,RISK_TYPE:29,
-  SEIZE_ITEMS:30,SEIZE_PCS:31,SEIZE_VAL:32,
-  FREEZE_ITEMS:33,FREEZE_PCS:34,FREEZE_VAL:35,
-  TOTAL_ITEMS:36,TOTAL_PCS:37,TOTAL_VAL:38,
-  PRESS:39,PRESS_LINK:40,RESULT:41,
-  LAW_DRUG:42,LAW_DRUG_SEC:43,LAW_FOOD:44,LAW_FOOD_SEC:45,
-  LAW_HAZ:46,LAW_HAZ_SEC:47,LAW_MED:48,LAW_MED_SEC:49,
-  LAW_COS:50,LAW_COS_SEC:51,LAW_HERB:52,LAW_HERB_SEC:53,
-  LAW_DRUG2:54,LAW_DRUG2_SEC:55,REMARK:56
+  ADDR_NO:18,VILLAGE:19,MOO:20,SOI:21,ROAD:22,SUBDISTRICT:23,DISTRICT:24,PROVINCE:25,GPS:26,
+  PREFIX:27,FNAME:28,LNAME:29,ID_CARD:30,RISK_TYPE:31,
+  SEIZE_ITEMS:31,SEIZE_PCS:32,SEIZE_VAL:33,
+  FREEZE_ITEMS:34,FREEZE_PCS:35,FREEZE_VAL:36,
+  TOTAL_ITEMS:37,TOTAL_PCS:38,TOTAL_VAL:39,
+  PRESS:40,PRESS_LINK:41,RESULT:42,
+  LAW_DRUG:43,LAW_DRUG_SEC:44,LAW_FOOD:45,LAW_FOOD_SEC:46,
+  LAW_HAZ:47,LAW_HAZ_SEC:48,LAW_MED:49,LAW_MED_SEC:50,
+  LAW_COS:51,LAW_COS_SEC:52,LAW_HERB:53,LAW_HERB_SEC:54,
+  LAW_DRUG2:55,LAW_DRUG2_SEC:56,REMARK:57
 };
 const LAW_LABELS=[
-  {key:'drug',label:'พ.ร.บ.ยา',col:COL.LAW_DRUG,secCol:COL.LAW_DRUG_SEC,color:'#2055A4'},
-  {key:'food',label:'พ.ร.บ.อาหาร',col:COL.LAW_FOOD,secCol:COL.LAW_FOOD_SEC,color:'#1E8C5A'},
-  {key:'haz',label:'พ.ร.บ.วัตถุอันตราย',col:COL.LAW_HAZ,secCol:COL.LAW_HAZ_SEC,color:'#C0392B'},
-  {key:'med',label:'พ.ร.บ.เครื่องมือแพทย์',col:COL.LAW_MED,secCol:COL.LAW_MED_SEC,color:'#D68910'},
-  {key:'cos',label:'พ.ร.บ.เครื่องสำอาง',col:COL.LAW_COS,secCol:COL.LAW_COS_SEC,color:'#8E44AD'},
-  {key:'herb',label:'พ.ร.บ.สมุนไพร',col:COL.LAW_HERB,secCol:COL.LAW_HERB_SEC,color:'#16A085'},
-  {key:'drug2',label:'ประมวลยาเสพติด',col:COL.LAW_DRUG2,secCol:COL.LAW_DRUG2_SEC,color:'#E74C3C'},
+  {key:'drug',label:'พ.ร.บ.ยา',col:COL.LAW_DRUG,color:'#2055A4'},
+  {key:'food',label:'พ.ร.บ.อาหาร',col:COL.LAW_FOOD,color:'#1E8C5A'},
+  {key:'haz',label:'พ.ร.บ.วัตถุอันตราย',col:COL.LAW_HAZ,color:'#C0392B'},
+  {key:'med',label:'พ.ร.บ.เครื่องมือแพทย์',col:COL.LAW_MED,color:'#D68910'},
+  {key:'cos',label:'พ.ร.บ.เครื่องสำอาง',col:COL.LAW_COS,color:'#8E44AD'},
+  {key:'herb',label:'พ.ร.บ.สมุนไพร',col:COL.LAW_HERB,color:'#16A085'},
+  {key:'drug2',label:'ประมวลยาเสพติด',col:COL.LAW_DRUG2,color:'#E74C3C'},
 ];
 Chart.defaults.font.family="'Sarabun', sans-serif";
 let allRows=[],filtered=[],listPage=1,reportPage=1;
@@ -393,26 +353,13 @@ const monthlyChart=new Chart(document.getElementById('monthlyChart'),{type:'bar'
 const lawChart=new Chart(document.getElementById('lawChart'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:LAW_LABELS.map(l=>l.color),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} ครั้ง`}}}}});
 const placeChart=new Chart(document.getElementById('placeChart'),{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:['#2055A4','#1E8C5A','#D68910','#C0392B','#8E44AD','#16A085','#E67E22','#2980B9'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} ครั้ง`}}}}});
 
-// Mobile sidebar
-function toggleSidebar(){
-  const sb=document.querySelector('.sidebar');
-  const ov=document.getElementById('sidebarOverlay');
-  sb.classList.toggle('open');
-  ov.classList.toggle('open');
-}
-
 // Navigation
 function showPage(id,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   el.classList.add('active');
-  // ปิด sidebar บนมือถือหลังเลือกเมนู
-  if(window.innerWidth<=768){
-    document.querySelector('.sidebar').classList.remove('open');
-    document.getElementById('sidebarOverlay').classList.remove('open');
-  }
-  const t={dashboard:'📊 ภาพรวมการตรวจ',list:'🏭 รายการสถานประกอบการ',report:'📋 รายงานการตรวจ',map:'📍 แผนที่ GPS',settings:'⚙️ ตั้งค่าระบบ'};
+  const t={dashboard:'📊 แดชบอร์ดผลการดำเนินการตรวจสอบสถานประกอบการ',list:'🏭 รายการสถานประกอบการทั้งหมด',report:'📋 รายงานการตรวจรายเคส',map:'📍 แผนที่ตำแหน่งการตรวจ GPS',settings:'⚙️ ตั้งค่าระบบ'};
   document.getElementById('pageTitle').textContent=t[id]||'';
   if(id==='list')renderList();
   if(id==='report')renderReport();
@@ -496,9 +443,7 @@ function renderDashboard(){
   document.getElementById('kSeize').textContent=fmtMoney(seize);
   document.getElementById('kFreeze').textContent=fmtMoney(freeze);
   document.getElementById('kTotal').textContent=fmtMoney(total);
-  // แถลงข่าว — นับไม่ซ้ำโดยใช้ลิงก์เป็น key
-  const pressSet=new Set(rows.filter(r=>hasVal(r[COL.PRESS])).map(r=>String(r[COL.PRESS_LINK]&&r[COL.PRESS_LINK]!==''?r[COL.PRESS_LINK]:r[COL.PRESS]).trim()));
-  const nc=pressSet.size;
+  const nc=rows.filter(r=>hasVal(r[COL.PRESS])).length;
   document.getElementById('kNews').textContent=nc.toLocaleString();
   document.getElementById('kNewsSub').textContent=`ครั้ง (${rows.length?((nc/rows.length)*100).toFixed(0):0}%)`;
   // Monthly
@@ -509,8 +454,9 @@ function renderDashboard(){
   monthlyChart.data.labels=fo.map(i=>ml[i]);
   monthlyChart.data.datasets[0].data=fo.map(i=>cnt[i]);
   monthlyChart.update();
-  // Law — นับจาก secCol โดยตรง
-  const lc=LAW_LABELS.map(l=>rows.filter(r=>hasVal(r[l.secCol])).length);
+  // Law — นับเฉพาะที่มีมาตราความผิด
+  const SEC_COL={LAW_DRUG:COL.LAW_DRUG_SEC,LAW_FOOD:COL.LAW_FOOD_SEC,LAW_HAZ:COL.LAW_HAZ_SEC,LAW_MED:COL.LAW_MED_SEC,LAW_COS:COL.LAW_COS_SEC,LAW_HERB:COL.LAW_HERB_SEC,LAW_DRUG2:COL.LAW_DRUG2_SEC};
+  const lc=LAW_LABELS.map(l=>{const secCol=Object.entries(SEC_COL).find(([k])=>COL[k]===l.col);return secCol?rows.filter(r=>hasVal(r[secCol[1]])).length:0;});
   lawChart.data.labels=LAW_LABELS.map(l=>l.label);
   lawChart.data.datasets[0].data=lc;lawChart.update();
   document.getElementById('lawTag').textContent=lc.reduce((a,b)=>a+b,0)+' ครั้ง';
@@ -532,7 +478,8 @@ function renderDashboard(){
   }).join(''):'<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted)">ไม่พบข้อมูล</td></tr>';
   // Law progress
   const lm=Math.max(...lc,1);
-  document.getElementById('lawProgress').innerHTML=LAW_LABELS.map((l,i)=>`<div class="prog-item"><div class="prog-hd"><span style="font-size:12px">${l.label}</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:11.5px;color:var(--navy)">${lc[i]} ครั้ง</span></div><div class="prog-bar"><div class="prog-fill" style="width:${(lc[i]/lm*100).toFixed(1)}%;background:${l.color}"></div></div><div class="prog-sub">${lt>0?((lc[i]/lt)*100).toFixed(1):0}% ของทั้งหมด</div></div>`).join('');  document.getElementById('footCount').textContent=`แสดง ${rows.length.toLocaleString()} / ${allRows.length.toLocaleString()} รายการ`;
+  document.getElementById('lawProgress').innerHTML=LAW_LABELS.map((l,i)=>`<div class="prog-item"><div class="prog-hd"><span style="font-size:12px">${l.label}</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:11.5px;color:var(--navy)">${lc[i]} ครั้ง</span></div><div class="prog-bar"><div class="prog-fill" style="width:${(lc[i]/lm*100).toFixed(1)}%;background:${l.color}"></div></div><div class="prog-sub">${lt>0?((lc[i]/lt)*100).toFixed(1):0}% ของทั้งหมด</div></div>`).join('');
+  document.getElementById('footCount').textContent=`แสดง ${rows.length.toLocaleString()} / ${allRows.length.toLocaleString()} รายการ`;
 }
 
 // List page
@@ -574,7 +521,8 @@ function renderList(){
   document.getElementById('listTbody').innerHTML=slice.length?slice.map(r=>{
     const tv=parseNum(r[COL.TOTAL_VAL]);const hn=hasVal(r[COL.PRESS]);
     // แสดงเฉพาะ พ.ร.บ. ที่มีการกรอกมาตราความผิด
-    const al=LAW_LABELS.filter(l=>hasVal(r[l.secCol]));
+    const SEC_MAP={LAW_DRUG:COL.LAW_DRUG_SEC,LAW_FOOD:COL.LAW_FOOD_SEC,LAW_HAZ:COL.LAW_HAZ_SEC,LAW_MED:COL.LAW_MED_SEC,LAW_COS:COL.LAW_COS_SEC,LAW_HERB:COL.LAW_HERB_SEC,LAW_DRUG2:COL.LAW_DRUG2_SEC};
+    const al=LAW_LABELS.filter(l=>hasVal(r[SEC_MAP[Object.keys(SEC_MAP).find(k=>COL[k]===l.col)]]));
     const chips=al.length?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px">${al.map(l=>`<span class="law-chip" style="background:${l.color};font-size:10px;padding:1px 7px">${l.label}</span>`).join('')}</div>`:'<span style="font-size:11px;color:var(--muted)">—</span>';
     return `<tr onclick="openDetail(${r[COL.NO]})"><td style="font-family:'IBM Plex Mono',monospace;font-size:11px">${r[COL.NO]||'—'}</td><td style="white-space:nowrap;font-size:11px">${fmtDate(r[COL.DATE_INSPECT])}</td><td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[COL.BLDG_NAME]||''}">${r[COL.BLDG_NAME]||'—'}</td><td style="font-size:11px">${r[COL.PLACE_TYPE]||'—'}</td><td style="font-size:11px">${r[COL.PROVINCE]||'—'}</td><td style="font-size:11px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r[COL.KEYWORD]||''}">${r[COL.KEYWORD]||'—'}</td><td style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r[COL.RISK_TYPE]||'—'}</td><td style="font-family:'IBM Plex Mono',monospace;font-size:11px;text-align:right">${tv>0?fmtMoney(tv):'—'}</td><td>${chips}</td><td><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openDetail(${r[COL.NO]})">ดู</button></td></tr>`;
   }).join(''):'<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--muted)">ไม่พบข้อมูล</td></tr>';
@@ -605,8 +553,8 @@ function renderReport(){
   const slice=rows.slice((reportPage-1)*PAGE_SIZE,reportPage*PAGE_SIZE);
   document.getElementById('reportCards').innerHTML=slice.length?slice.map(r=>{
     const tv=parseNum(r[COL.TOTAL_VAL]);const hn=hasVal(r[COL.PRESS]);
-    const SEC_MAP2={drug:COL.LAW_DRUG_SEC,food:COL.LAW_FOOD_SEC,haz:COL.LAW_HAZ_SEC,med:COL.LAW_MED_SEC,cos:COL.LAW_COS_SEC,herb:COL.LAW_HERB_SEC,drug2:COL.LAW_DRUG2_SEC};
-    const al=LAW_LABELS.filter(l=>{const k=Object.keys(SEC_MAP2).find(k=>COL['LAW_'+k.toUpperCase()]===l.col||l.key===k);return k&&hasVal(r[SEC_MAP2[k]]);});
+    const SEC_MAP2={LAW_DRUG:COL.LAW_DRUG_SEC,LAW_FOOD:COL.LAW_FOOD_SEC,LAW_HAZ:COL.LAW_HAZ_SEC,LAW_MED:COL.LAW_MED_SEC,LAW_COS:COL.LAW_COS_SEC,LAW_HERB:COL.LAW_HERB_SEC,LAW_DRUG2:COL.LAW_DRUG2_SEC};
+    const al=LAW_LABELS.filter(l=>{const k=Object.keys(SEC_MAP2).find(k=>COL[k]===l.col);return k&&hasVal(r[SEC_MAP2[k]]);});
     const addr=[r[COL.ADDR_NO],r[COL.SOI]?'ซ.'+r[COL.SOI]:'',r[COL.ROAD]?'ถ.'+r[COL.ROAD]:'',r[COL.SUBDISTRICT],r[COL.DISTRICT],r[COL.PROVINCE]].filter(Boolean).join(' ');
     return `<div class="card" style="padding:16px;cursor:pointer;margin-bottom:0" onclick="openDetail(${r[COL.NO]})">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
@@ -647,7 +595,8 @@ function renderPagination(id,cur,total,cb){
 function openDetail(no){
   const r=allRows.find(row=>String(row[COL.NO])===String(no));if(!r)return;
   const addr=[r[COL.ADDR_NO],r[COL.VILLAGE]?'หมู่บ้าน'+r[COL.VILLAGE]:'',r[COL.MOO]?'หมู่'+r[COL.MOO]:'',r[COL.SOI]?'ซ.'+r[COL.SOI]:'',r[COL.ROAD]?'ถ.'+r[COL.ROAD]:'',r[COL.SUBDISTRICT],r[COL.DISTRICT],r[COL.PROVINCE]].filter(Boolean).join(' ');
-  const al=LAW_LABELS.filter(l=>hasVal(r[l.secCol]));
+  const SEC_MAP3={LAW_DRUG:COL.LAW_DRUG_SEC,LAW_FOOD:COL.LAW_FOOD_SEC,LAW_HAZ:COL.LAW_HAZ_SEC,LAW_MED:COL.LAW_MED_SEC,LAW_COS:COL.LAW_COS_SEC,LAW_HERB:COL.LAW_HERB_SEC,LAW_DRUG2:COL.LAW_DRUG2_SEC};
+  const al=LAW_LABELS.filter(l=>{const k=Object.keys(SEC_MAP3).find(k=>COL[k]===l.col);return k&&hasVal(r[SEC_MAP3[k]]);});
   const tv=parseNum(r[COL.TOTAL_VAL]),sv=parseNum(r[COL.SEIZE_VAL]),fv=parseNum(r[COL.FREEZE_VAL]);
   document.getElementById('modalTitle').textContent=`📋 #${r[COL.NO]} — ${r[COL.BLDG_NAME]||'ไม่ระบุชื่อ'}`;
   document.getElementById('modalBody').innerHTML=`<div class="detail-grid">
